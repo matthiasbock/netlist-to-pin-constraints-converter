@@ -181,6 +181,6 @@ class Netlist:
                           net.getLabel()
                           )
                       )
-            connectedNets += [net]
+            connectedNets += [(net, pin1, pin2)]
 
         return connectedNets
