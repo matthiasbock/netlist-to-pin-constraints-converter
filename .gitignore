@@ -1,2 +1,12 @@
+
+# Python binaries
 *.pyc
+__pycache__
+
+# Eclipse files
+.project
+.cproject
+.pydevproject
+.settings
+.metadata
 
