@@ -4,20 +4,21 @@ import re
 from netlists import *
 
 
+#
+# Parses and handles a netlist in Tango format
+#
 class TangoNetlist(Netlist):
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, debug=False):
         if not (filename is None):
-            self.read(filename)
-            self.parse()
+            self.readFromFile(filename)
+            self.parse(debug)
 
-    def read(self, filename):
-        f = open(filename, "r")
-        self.text = f.read()
-        #print(self.text)
-        f.close()
-
-    def parse(self):
-        # Parse netlist components
+    #
+    # Parse the imported text and generate a
+    # list of components and nets
+    #
+    def parse(self, debug=False):
+        # Use regular expression to parse components
         r = re.compile("\[\r\n([^\r]+)\r\n([^\r]*)\r\n([^\r]*)\r\n[^\]]*\]")
         l = re.findall(r, self.text)
         self.components = []
@@ -26,12 +27,14 @@ class TangoNetlist(Netlist):
             footprint = result[1]
             description = result[2]
             self.components += [ Component(designator=designator, description=description, footprint=footprint) ]
-            #print("{:s}: {:s} ({:s})".format(designator, description, footprint))
+            if debug:
+                print("{:s}: {:s} ({:s})".format(designator, description, footprint))
 
-        print("Found {:d} components:".format(len(self.components)))
-        print([c.designator for c in self.components])
+        if debug:
+            print("Found {:d} components:".format(len(self.components)))
+            print([c.getDesignator() for c in self.components])
 
-        # Parse nets
+        # Use regular expression to parse nets
         r = re.compile("\(\r\n([^\r]+)\r\n([^\)]*)\r\n\)")
         l = re.findall(r, self.text)
         self.nets = []
@@ -43,8 +46,13 @@ class TangoNetlist(Netlist):
                 designator = pin.split(",")[0]
                 name = pin.split(",")[1]
                 component = self.findComponentByDesignator(designator)
-                p = component.addPinByName(name)
+                if component is None:
+                    print("Error: Net '{:s}' references unknown component '{:s}'. Skipping.".format(netlabel, designator))
+                    continue
+                p = component.createPinFromName(name)
                 net.addPin(p)
-                
+
             self.nets += [net]
-            print("Pins on net {:s}: {:s}".format(net.label, str([str(p) for p in net.pins])))
+            if debug:
+                print("{:d} pin(s) are connected to net '{:s}': {:s}".format(len(net.getPins()), net.getLabel(), str([str(p) for p in net.getPins()])))
+

@@ -17,7 +17,7 @@ class Pin:
         return self.component
 
     def __str__(self):
-        return str(self.component.designator) + "," + str(self.name)
+        return self.getComponent().getDesignator() + "," + self.getName()
 
 
 #
@@ -28,6 +28,8 @@ class Pin:
 class Component:
     def __init__(self, designator="", description="", footprint=""):
         self.designator = designator.strip()
+        if self.designator == "*":
+            print("Warning: Created component with wildcard designator.")
         self.description = description.strip()
         self.footprint = footprint.strip()
         self.pins = []
@@ -38,11 +40,11 @@ class Component:
                 return pin
         return None
 
-    def addPinByName(self, name):
+    def createPinFromName(self, name):
         # Does a pin with that name already exist?
         p = self.findPinByName(name)
         if p is None:
-            p = Pin(component=self.getDesignator(), name=name)
+            p = Pin(component=self, name=name)
             self.pins += [p]
         return p
 
@@ -88,13 +90,34 @@ class Net:
                 return pin
         return None
 
+    def __str__(self):
+        return self.getLabel()
+
 #
 # A list of components and nets
+# Both are stored as a object references.
 #
 class Netlist:
     def __init__(self):
         self.components = []
         self.nets = []
+
+    #
+    # Only reads the text from a file.
+    # A format-specific method still needs
+    # to take care of parsing afterwards.
+    #
+    def readFromFile(self, filename):
+        f = open(filename, "r")
+        self.text = f.read()
+        # print(self.text)
+        f.close()
+
+    def getComponents(self):
+        return self.components
+
+    def getNets(self):
+        return self.nets
 
     def findComponentByDesignator(self, designator):
         designator = designator.upper().strip()
@@ -112,8 +135,52 @@ class Netlist:
         print("Error: Component not found: " + description)
         return None
 
-    def getComponents(self):
-        return self.components
+    def findComponentByKeyword(self, keyword):
+        keyword = keyword.upper().strip()
+        component = None
+        for component in self.getComponents():
+            if (component.getDesignator().upper().find(keyword) > -1) \
+            or (component.getDescription().upper().find(keyword) > -1):
+                return component
+        print("Error: Component not found.")
+        return None
 
-    def getNets(self):
-        return self.nets
+    #
+    # Extract all connections between two components (except power pins)
+    # Requires the two components' designators and
+    # returns a list of Net objects
+    #
+    def elaborateComponentConnections(self, designator1, designator2, debug=False):
+        connectedNets = []
+        for net in self.getNets():
+            if net.isPower():
+                # Disregard non-signal net
+                continue
+
+            if len(net.getPins()) < 2:
+                # Disregard unconnected nets
+                continue
+
+            pin1 = net.getPin(componentDesignator=designator1)
+            if pin1 is None:
+                # Component 1 is not connected to this net
+                continue
+
+            pin2 = net.getPin(componentDesignator=designator2)
+            if pin2 is None:
+                # Component 2 is not connected to this net
+                continue
+
+            if debug:
+                print("Component {:s} pin {:s} is connected to component {:s} pin {:s} on net {:s}." \
+                      .format(
+                          designator1,
+                          pin1.getName(),
+                          designator2,
+                          pin2.getName(),
+                          net.getLabel()
+                          )
+                      )
+            connectedNets += [net]
+
+        return connectedNets
