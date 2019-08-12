@@ -17,7 +17,7 @@ class TangoNetlist(Netlist):
     # Parse the imported text and generate a
     # list of components and nets
     #
-    def parse(self, debug=False):
+    def parse(self, debug=False, debugComponents=False):
         # Use regular expression to parse components
         r = re.compile("\[\r\n([^\r]+)\r\n([^\r]*)\r\n([^\r]*)\r\n[^\]]*\]")
         l = re.findall(r, self.text)
@@ -31,8 +31,9 @@ class TangoNetlist(Netlist):
                 print("{:s}: {:s} ({:s})".format(designator, description, footprint))
 
         if debug:
-            print("Found {:d} components:".format(len(self.components)))
-            print([c.getDesignator() for c in self.components])
+            print("Found {:d} components.".format(len(self.components)))
+            if debugComponents:
+                print([c.getDesignator() for c in self.components])
 
         # Use regular expression to parse nets
         r = re.compile("\(\r\n([^\r]+)\r\n([^\)]*)\r\n\)")
