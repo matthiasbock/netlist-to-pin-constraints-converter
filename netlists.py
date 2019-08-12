@@ -54,6 +54,9 @@ class Component:
     def getDescription(self):
         return self.description
 
+    def getPins(self):
+        return self.pins
+
 
 #
 # A net is a list of connected pins.
@@ -171,6 +174,18 @@ class Netlist:
             return self.getComponentByDescription(description)
         if not (keyword is None):
             return self.getComponentByKeyword(keyword)
+        return None
+
+    #
+    # Returns the net (object reference) of the net on the given pin (object reference)
+    #
+    def getNetOnPin(self, pin, debug=False):
+        for net in self.getNets():
+            for p in net.getPins():
+                if p == pin:
+                    if debug:
+                        print("Found net {:s} for component {:s}, pin {:s}.".format(net.getLabel(), p.getComponent().getDesignator(), p.getName()))
+                    return net
         return None
 
     #
