@@ -45,7 +45,7 @@ class TangoNetlist(Netlist):
             for pin in result[1].split("\r\n"):
                 designator = pin.split(",")[0]
                 name = pin.split(",")[1]
-                component = self.findComponentByDesignator(designator)
+                component = self.getComponent(designator=designator)
                 if component is None:
                     print("Error: Net '{:s}' references unknown component '{:s}'. Skipping.".format(netlabel, designator))
                     continue
