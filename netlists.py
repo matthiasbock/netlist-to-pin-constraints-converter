@@ -34,15 +34,15 @@ class Component:
         self.footprint = footprint.strip()
         self.pins = []
 
-    def findPinByName(self, name):
+    def getPinByName(self, name):
         for pin in self.pins:
-            if pin.name == name:
+            if pin.getName() == name:
                 return pin
         return None
 
     def createPinFromName(self, name):
         # Does a pin with that name already exist?
-        p = self.findPinByName(name)
+        p = self.getPinByName(name)
         if p is None:
             p = Pin(component=self, name=name)
             self.pins += [p]
@@ -57,7 +57,7 @@ class Component:
 
 #
 # A net is a list of connected pins.
-# It has a name i.e. label.
+# It has a name i.e. label and a list of pins (object references).
 #
 class Net:
     def __init__(self, label=""):
@@ -95,7 +95,7 @@ class Net:
 
 #
 # A list of components and nets
-# Both are stored as a object references.
+# (both stored as a object references).
 #
 class Netlist:
     def __init__(self):
@@ -113,13 +113,22 @@ class Netlist:
         # print(self.text)
         f.close()
 
+    #
+    # Return all components in this netlist
+    #
     def getComponents(self):
         return self.components
 
+    #
+    # Return all nets in this netlist
+    #
     def getNets(self):
         return self.nets
 
-    def findComponentByDesignator(self, designator):
+    #
+    # Return the component with the given designator (not case-sensitive)
+    #
+    def getComponentByDesignator(self, designator):
         designator = designator.upper().strip()
         for component in self.components:
             if component.getDesignator().upper() == designator:
@@ -127,7 +136,10 @@ class Netlist:
         print("Error: Component not found: " + designator)
         return None
 
-    def findComponentByDescription(self, description):
+    #
+    # Return the component with the given description (not case-sensitive)
+    #
+    def getComponentByDescription(self, description):
         description = description.upper().strip()
         for component in self.components:
             if component.getDescription().upper() == description:
@@ -135,7 +147,11 @@ class Netlist:
         print("Error: Component not found: " + description)
         return None
 
-    def findComponentByKeyword(self, keyword):
+    #
+    # Return the first component containing the given keyword
+    # in either description or designator (not case-sensitive)
+    #
+    def getComponentByKeyword(self, keyword):
         keyword = keyword.upper().strip()
         component = None
         for component in self.getComponents():
@@ -143,6 +159,18 @@ class Netlist:
             or (component.getDescription().upper().find(keyword) > -1):
                 return component
         print("Error: Component not found.")
+        return None
+
+    #
+    # A convenience wrapper for the above methods
+    #
+    def getComponent(self, designator=None, description=None, keyword=None):
+        if not (designator is None):
+            return self.getComponentByDesignator(designator)
+        if not (description is None):
+            return self.getComponentByDescription(description)
+        if not (keyword is None):
+            return self.getComponentByKeyword(keyword)
         return None
 
     #
