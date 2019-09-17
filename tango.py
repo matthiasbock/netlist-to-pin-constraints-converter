@@ -19,7 +19,7 @@ class TangoNetlist(Netlist):
     #
     def parse(self, debug=False, debugComponents=False):
         # Use regular expression to parse components
-        r = re.compile("\[\r\n([^\r]+)\r\n([^\r]*)\r\n([^\r]*)\r\n[^\]]*\]")
+        r = re.compile("\[[\r\n]*([^\r\n]+)[\r\n]+([^\r\n]*)[\r\n]+([^\r\n]*)[\r\n]+[^\]]*\]")
         l = re.findall(r, self.text)
         self.components = []
         for result in l:
@@ -36,14 +36,21 @@ class TangoNetlist(Netlist):
                 print([c.getDesignator() for c in self.components])
 
         # Use regular expression to parse nets
-        r = re.compile("\(\r\n([^\r]+)\r\n([^\)]*)\r\n\)")
+        r = re.compile("\([\r\n]*([^\r\n]+)[\r\n]+([^\)]*)[\r\n]*\)")
         l = re.findall(r, self.text)
         self.nets = []
         for result in l:
             netlabel = result[0]
             net = Net(label=netlabel)
+            pins = result[1].replace("\r", "\n").split("\n")
 
-            for pin in result[1].split("\r\n"):
+            for pin in pins:
+                if len(pin.strip()) < 1:
+                    # Skip empty lines
+                    continue
+                if pin.find(",") < 0:
+                    # Skip illegaly formated lines
+                    continue
                 designator = pin.split(",")[0]
                 name = pin.split(",")[1]
                 component = self.getComponent(designator=designator)
@@ -56,4 +63,3 @@ class TangoNetlist(Netlist):
             self.nets += [net]
             if debug:
                 print("{:d} pin(s) are connected to net '{:s}': {:s}".format(len(net.getPins()), net.getLabel(), str([str(p) for p in net.getPins()])))
-
