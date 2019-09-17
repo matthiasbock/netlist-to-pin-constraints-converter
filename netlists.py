@@ -96,6 +96,14 @@ class Net:
     def __str__(self):
         return self.getLabel()
 
+
+#
+# Convert string for compatibility with regular expressions
+#
+def cleanupEncoding(s):
+    return str(s.encode("ascii", "replace")).replace("\\n", "\n")
+
+
 #
 # A list of components and nets
 # (both stored as a object references).
@@ -111,8 +119,9 @@ class Netlist:
     # to take care of parsing afterwards.
     #
     def readFromFile(self, filename):
-        f = open(filename, "r")
-        self.text = f.read()
+        f = open(filename, "r", encoding="iso8859_15")
+        # f = open(filename, "r")
+        self.text = cleanupEncoding(f.read())
         # print(self.text)
         f.close()
 
