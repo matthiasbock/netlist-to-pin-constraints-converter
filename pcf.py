@@ -21,10 +21,10 @@ class PCF:
         self.constraints += [[pin, signal]]
 
     def sortBySignal(self):
-        self.constraints.sort(cmpSignal)
+        self.constraints = sorted(self.constraints, key = lambda c: c[1])
 
     def sortByPin(a, b):
-        self.constraints.sort(cmpPin)
+        self.constraints = sorted(self.constraints, key = lambda c: c[0])
 
     def __str__(self):
         result = "\n"
