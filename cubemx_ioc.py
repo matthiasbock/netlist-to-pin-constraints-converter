@@ -31,13 +31,19 @@ class IOC:
     # Find and return the pin for which the given
     # alternate function is configured
     #
-    def getPinByAlternateFunction(self, af):
+    def getPinBySignal(self, af, acceptLabelMatch=False):
         AF = af.upper()
         for line in self.lines:
             if len(line) == 0:
                 continue
             if line[0] == "#":
                 continue
+
+            # A label match has priority over a signal match
+            if acceptLabelMatch and (line.upper().find(".GPIO_LABEL=" + AF) > -1):
+                pin = line.split(".")[0]
+                return pin
+
             if line.upper().find(".SIGNAL=" + AF) > -1:
                 pin = line.split(".")[0]
                 return pin
