@@ -38,14 +38,9 @@ class CubeXML:
         self.pins = self.rootNode.getElementsByTagName("Pin")
 
     #
-    # Returns the pin number (e.g. 2) of the given pin name (e.g. PC13)
+    # Iterate over all pins and return the matching XML element
     #
-    def getPinNumber(self, pinName):
-        # Acceptable argument?
-        if pinName == "":
-            return None
-
-        # Iterate over all MCU pins
+    def getPin(self, pinNumber=None, pinName=None):
         for pin in self.pins:
             keys = pin.attributes.keys()
 
@@ -54,16 +49,46 @@ class CubeXML:
             if not (key in keys):
                 continue
             name = pin.attributes[key].value
-            if name != pinName:
-                continue
 
             # ...then extract the pin number
             key = "Position"
             if not (key in keys):
                 continue
-            position = int(pin.attributes[key].value)
-            return position
+            try:
+                position = int(pin.attributes[key].value)
+            except:
+                continue
+
+            if (not (pinNumber is None)) and (position == pinNumber):
+                return name
+
+            if (not (pinName is None)) and (name == pinName):
+                return position
         return None
+
+    #
+    # Returns the pin number (e.g. 2) of the given pin name (e.g. PC13)
+    #
+    def getPinNumber(self, pinName):
+        # Acceptable argument?
+        if pinName == "":
+            return None
+
+        return self.getPin(pinName=pinName)
+
+    #
+    # Returns the pin name (e.g. PC13) of the given pin number (e.g. 2)
+    #
+    def getPinName(self, pinNumber):
+        # Acceptable argument?
+        try:
+            number = int(pinNumber)
+            if number < 1:
+                return None
+        except:
+            return None
+
+        return self.getPin(pinNumber=number)
 
 
 #
