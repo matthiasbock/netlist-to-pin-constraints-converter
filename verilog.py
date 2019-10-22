@@ -124,8 +124,18 @@ class Assertions():
         self.assertions += [[assertion, arg0]]
 
     def apply(self, netlist):
+        succeeded = 0
+        failed = 0
+        fatal = 0
         for assertion in self.assertions:
-            self.applyAssertion(netlist, assertion)
+            result = self.applyAssertion(netlist, assertion)
+            if result["success"]:
+                succeeded += 1
+            else:
+                failed += 1
+            if ("fatal" in result.keys()) and result["fatal"]:
+                fatal += 1
+        return {"succeeded": succeeded, "failed": failed, "fatal": fatal}
 
     def applyAssertion(self, netlist, assertion):
         result = assertion[0](netlist, assertion[1])
@@ -135,3 +145,4 @@ class Assertions():
         else:
             # print("[FAILED]  {:s}(\"{:s}\"): {:s}".format(str(assertion[0]), str(assertion[1]), result["message"]))
             print("[FAILED]  {:s}".format(result["message"]))
+        return result
