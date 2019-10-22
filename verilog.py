@@ -21,32 +21,35 @@ primitives = [
 #
 # Some regular expressions to help us parsing
 #
-pattern_signal              = "[a-zA-Z0-9\_\\\.\[\:\]]+"
-pattern_signal_or_literal   = "[a-zA-Z0-9\_\\\.\[\:\]\']+"
+pattern_signal              = "[a-zA-Z0-9\_\.\[\:\]]+"
+pattern_signal_or_literal   = "[a-zA-Z0-9\_\.\[\:\]\']+"
 regex_literal_decimal       = re.compile("[0-9]+")
 regex_literal_hexadecimal   = re.compile("[0-9]+\'h[0-9a-fA-FxX]+")
 regex_literal_binary        = re.compile("[0-9]+\'b[0-1xX]+")
-regex_assign                = re.compile("[\t ]*assign[\t ]+(" + pattern_signal + ")[\t ]*=[\t ]*(" + pattern_signal_or_literal + ")[\t ]*;[\t ]*\n")
+regex_assign                = re.compile("[\t ]*assign[\t ]+[\\\\]*(" + pattern_signal + ")[\t ]*=[\t ]*(" + pattern_signal_or_literal + ")[\t ]*;[\t ]*\n")
 
 
 #
 # A class to hold static assertion methods
 #
 class assertion:
-    def isLiteral(expression):
+    def result(success=False, message="<No message not specified>"):
+        return {"success": success, "message": message}
+
+    def isLiteral(netlist=None, expression=""):
         if regex_literal_decimal.fullmatch(expression) \
         or regex_literal_hexadecimal.fullmatch(expression) \
         or regex_literal_binary.fullmatch(expression):
-            return True
-        return False
+            return assertion.result(success=True)
+
+        return assertion.result(success=False)
 
     def netExists(netlist, net):
         assign = netlist.findAssign(net)
         if assign is None:
-            print("Net {:s} is not part of the design.".format(net))
-            return False
-        print("Net {:s} is part of the design.".format(net))
-        return True
+            return assertion.result(success=False, message="Net {:s} is not part of the design.".format(net))
+
+        return assertion.result(success=True, message="Net {:s} is part of the design.".format(net))
 
     def netIsConstant(netlist, net):
         #
@@ -56,29 +59,23 @@ class assertion:
         assign = netlist.findAssign(net)
 
         if assign is None:
-            print("Net {:s} is not driven at all.".format(net))
-            return True
+            return assertion.result(success=True, message="Net {:s} is not driven at all (and therefore constant).".format(net))
 
-        if assertion.isLiteral(assign["rhs"]):
-            print("Net {:s} is driven by a constant.".format(net))
-            return True
+        if assertion.isLiteral(expression=assign["rhs"])["success"]:
+            return assertion.result(success=True, message="Net {:s} is driven by a constant.".format(net))
 
-        print("Net {:s} is driven by something but not by a constant.".format(net))
-        return False
+        return assertion.result(success=False, message="Net {:s} is driven by something but not by a constant.".format(net))
 
     def netIsNotConstant(netlist, net):
         assign = netlist.findAssign(net)
 
         if assign is None:
-            print("Net {:s} is not driven at all.".format(net))
-            return False
+            return assertion.result(success=False, message="Net {:s} is not driven at all.".format(net))
 
-        if assertion.isLiteral(assign["rhs"]):
-            print("Net {:s} is driven by constant {:s}.".format(net, assign["rhs"]))
-            return False
+        if assertion.isLiteral(expression=assign["rhs"])["success"]:
+            return assertion.result(success=False, message="Net {:s} is driven by a constant: {:s}".format(net, assign["rhs"]))
 
-        print("Net {:s} is driven by something but not by a constant.".format(net))
-        return True
+        return assertion.result(success=True, message="Net {:s} is driven by something but not by a constant.".format(net))
 
 
 #
@@ -131,7 +128,10 @@ class Assertions():
             self.applyAssertion(netlist, assertion)
 
     def applyAssertion(self, netlist, assertion):
-        if assertion[0](netlist, assertion[1]):
-            print("[SUCCESS] {:s}(\"{:s}\")".format(str(assertion[0]), str(assertion[1])))
+        result = assertion[0](netlist, assertion[1])
+        if result["success"]:
+            # print("[SUCCESS] {:s}(\"{:s}\"): {:s}".format(str(assertion[0]), str(assertion[1]), result["message"]))
+            print("[SUCCESS] {:s}".format(result["message"]))
         else:
-            print("[FAILED]  {:s}(\"{:s}\")".format(str(assertion[0]), str(assertion[1])))
+            # print("[FAILED]  {:s}(\"{:s}\"): {:s}".format(str(assertion[0]), str(assertion[1]), result["message"]))
+            print("[FAILED]  {:s}".format(result["message"]))
