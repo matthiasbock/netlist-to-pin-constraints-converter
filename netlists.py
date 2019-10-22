@@ -203,16 +203,11 @@ class Netlist:
     # returns a list of Net objects
     #
     def elaborateComponentConnections(self, designator1, designator2, debug=False):
+        #
+        # Iterate over all netlist nets and extract the ones with pins matching the given designators
+        #
         connectedNets = []
         for net in self.getNets():
-            if net.isPower():
-                # Disregard non-signal net
-                continue
-
-            if len(net.getPins()) < 2:
-                # Disregard unconnected nets
-                continue
-
             pin1 = net.getPin(componentDesignator=designator1)
             if pin1 is None:
                 # Component 1 is not connected to this net
@@ -221,6 +216,16 @@ class Netlist:
             pin2 = net.getPin(componentDesignator=designator2)
             if pin2 is None:
                 # Component 2 is not connected to this net
+                continue
+
+            if net.isPower():
+                # Disregard non-signal net
+                print("Info: Net {:s} is a power net. Skipping.".format(net.getLabel()))
+                continue
+
+            if len(net.getPins()) < 2:
+                # Disregard unconnected nets
+                print("Info: Net {:s} is not connected anywhere. Skipping.".format(net.getLabel()))
                 continue
 
             if debug:

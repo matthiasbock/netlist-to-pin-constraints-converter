@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+#
+# This file allows for import and manipulation
+# of a pin constraints file
+# as it is used in Lattice FPGA projects
+#
 
 
 def cmpPin(a, b):
