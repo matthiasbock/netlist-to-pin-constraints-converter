@@ -28,8 +28,20 @@ class PCF:
     def sortBySignal(self):
         self.constraints = sorted(self.constraints, key = lambda c: c[1])
 
-    def sortByPin(a, b):
+    def sortByPin(self):
         self.constraints = sorted(self.constraints, key = lambda c: c[0])
+
+    def hasSignal(self, signal):
+        for constraint in self.constraints:
+            if constraint[1] == signal:
+                return True
+        return False
+
+    def hasPin(self, pin):
+        for constraint in self.constraints:
+            if constraint[0] == pin:
+                return True
+        return False
 
     def __str__(self):
         result = "\n"
