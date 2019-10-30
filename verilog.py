@@ -21,6 +21,8 @@ primitives = [
 #
 # Some regular expressions to help us parsing
 #
+pattern_module              = "module[\t ]+[a-zA-Z0-9\_]+[\t ]*\(([^\)]+)\);"
+regex_module                = re.compile(pattern_module)
 pattern_signal              = "[a-zA-Z0-9\_\.\[\:\]]+"
 pattern_signal_or_literal   = "[a-zA-Z0-9\_\.\[\:\]\']+"
 regex_literal_decimal       = re.compile("[0-9]+")
@@ -45,6 +47,9 @@ class assertion:
         return assertion.result(success=False)
 
     def netExists(netlist, net):
+        if netlist.hasPort(net):
+            return assertion.result(success=True, message="{:s} is a module port.".format(net))
+
         assign = netlist.findAssign(net)
         if assign is None:
             return assertion.result(success=False, message="Net {:s} is not part of the design.".format(net))
@@ -88,7 +93,24 @@ class File():
         self.content = f.read()
         f.close()
         self.lines = self.content.split("\n")
+        self.parsePorts()
         self.parseAssigns()
+
+    # Parse all ports of the first module in the given file
+    def parsePorts(self):
+        self.ports = []
+        modules = re.findall(regex_module, self.content)
+        if len(modules) < 1:
+            return;
+        self.ports = modules[0].replace(" ", "").split(",")
+
+    # Find a module port
+    def hasPort(self, portname):
+        # Remove the indices
+        i = portname.find("[")
+        if i > -1:
+            portname = portname[:i].strip()
+        return (portname in self.ports)
 
     # Parse all assign statements into an array
     def parseAssigns(self):
