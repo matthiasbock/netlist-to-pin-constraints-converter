@@ -72,7 +72,7 @@ class Net:
 
     def isPower(self):
         # TODO: Match regexp to detect power net label
-        return self.label in ["GND", "1V2", "1.2V", "3V3", "3.3V", "5V", "12V"]
+        return self.label in ["GND", "DGND", "1V2", "1.2V", "3V3", "3.3V", "5V", "12V", "HV+", "HV-", "DC+", "DC-"]
 
     def addPin(self, pin):
         self.pins += [pin]
