@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import sys
+
 #
 # Import a CSV as row list of columns
 #
