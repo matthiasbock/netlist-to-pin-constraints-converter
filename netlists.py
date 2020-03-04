@@ -36,7 +36,7 @@ class Component:
 
     def getPinByName(self, name):
         for pin in self.pins:
-            if pin.getName() == name:
+            if str(pin.getName()) == str(name):
                 return pin
         return None
 
@@ -138,6 +138,21 @@ class Netlist:
         return self.nets
 
     #
+    # Returns the net with the given label if present, else None
+    #
+    def getNet(self, netlabel):
+        for net in self.getNets():
+            if net.getLabel() == netlabel:
+                return net
+        return None
+
+    #
+    # Returns true, if the given net is present in this netlist
+    #
+    def hasNet(self, netlabel):
+        return not (self.getNet(netlabel) is None)
+
+    #
     # Return the component with the given designator (not case-sensitive)
     #
     def getComponentByDesignator(self, designator):
@@ -189,12 +204,18 @@ class Netlist:
     # Returns the net (object reference) of the net on the given pin (object reference)
     #
     def getNetOnPin(self, pin, debug=False):
+        if pin is None:
+            if debug:
+                print("Error: Illegal argument None given to getNetOnPin().")
+            return None
         for net in self.getNets():
             for p in net.getPins():
                 if p == pin:
                     if debug:
                         print("Found net {:s} for component {:s}, pin {:s}.".format(net.getLabel(), p.getComponent().getDesignator(), p.getName()))
                     return net
+        if debug:
+            print("Error: Unable to detect the net connected to component {:s}, pin {:s}.".format(pin.getComponent().getDesignator(), pin.getName()))
         return None
 
     #
