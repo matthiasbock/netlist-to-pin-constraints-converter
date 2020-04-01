@@ -34,6 +34,11 @@ class Component:
         self.footprint = footprint.strip()
         self.pins = []
 
+    def getPinByNumber(self, number):
+        if len(self.pins) < number:
+            return None
+        return self.pins[number-1]
+
     def getPinByName(self, name):
         for pin in self.pins:
             if str(pin.getName()) == str(name):
@@ -201,7 +206,7 @@ class Netlist:
         return None
 
     #
-    # Returns the net (object reference) of the net on the given pin (object reference)
+    # Returns the net (object reference) of the given pin (object reference)
     #
     def getNetOnPin(self, pin, debug=False):
         if pin is None:
